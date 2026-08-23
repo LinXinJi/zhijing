@@ -381,6 +381,36 @@ def cmd_roadmap(g, G_, args):
     print(f"\n已导出: {os.path.join(export_dir, '分阶段计划.md')}")
 
 
+def cmd_find_links(g, G_, args):
+    """连接发现：基于图结构启发式，找出不同节点间值得建立的连接（建议，不自动建）。"""
+    nodes = g["nodes"]
+    adj = {n: set() for n in nodes}
+    for e in g["edges"]:
+        adj.setdefault(e["a"], set()).add(e["b"])
+        adj.setdefault(e["b"], set()).add(e["a"])
+    pairs = []
+    names = list(nodes)
+    for i in range(len(names)):
+        for j in range(i + 1, len(names)):
+            a, b = names[i], names[j]
+            if b in adj[a]:
+                continue
+            common = adj[a] & adj[b]
+            if common:
+                pairs.append((a, b, common))
+    pairs.sort(key=lambda x: -len(x[2]))
+    print("=== 连接建议（不同节点之间）===")
+    print("依据: 共享邻居越多 → 越可能有联系；建议类型 类比/对比/因果。")
+    if not pairs:
+        print("暂无基于结构的连接建议（节点太少或已充分相连）。")
+        return
+    for a, b, common in pairs[:12]:
+        shared = "、".join(sorted(common)[:3])
+        print(f"  · {a} ↔ {b}   共享: {shared}")
+    print(f"\n共 {len(pairs)} 组候选。")
+    print('确认后建边: add-edge <A> <B> --type 类比 --why "一句话联系" --source 连接发现')
+
+
 def cmd_teach_next(g, G_, args):
     nodes = g["nodes"]
     goal = g.get("goal", "")
@@ -1216,6 +1246,7 @@ def main():
     sub.add_parser("status")
     sub.add_parser("plan")
     sub.add_parser("roadmap")
+    sub.add_parser("find-links")
     sub.add_parser("teach-next")
     q = sub.add_parser("quiz")
     q.add_argument("node")
@@ -1301,6 +1332,7 @@ def main():
         "status": cmd_status,
         "plan": cmd_plan,
         "roadmap": cmd_roadmap,
+        "find-links": cmd_find_links,
         "teach-next": cmd_teach_next,
         "quiz": cmd_quiz,
         "review": cmd_review,

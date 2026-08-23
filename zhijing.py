@@ -404,6 +404,11 @@ def dispatch(base, line):
         if goal:
             print(run_ops("--graph", graph_path(base, goal), "roadmap"))
         return True
+    if s.startswith("找联系") or s.startswith("连接建议") or s.startswith("有什么联系"):
+        goal = choose_goal(base)
+        if goal:
+            print(run_ops("--graph", graph_path(base, goal), "find-links"))
+        return True
     if s.startswith("我学完了") or s.startswith("学完了"):
         cmd_graduate(base)
         return True
@@ -423,7 +428,7 @@ def dispatch(base, line):
     if bare in ("progress-all", "captures"):
         print(run_ops(bare, "--base", base))
         return True
-    if bare in ("status", "plan", "roadmap", "teach-next", "quiz", "review", "feel", "calibrate",
+    if bare in ("status", "plan", "roadmap", "find-links", "teach-next", "quiz", "review", "feel", "calibrate",
                 "graph", "graduate", "source", "import-headings", "undo", "progress",
                 "assess", "assess-all", "commit", "log", "timeline",
                 "review-node", "review-log", "add-node", "add-edge"):
