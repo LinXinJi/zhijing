@@ -7,7 +7,7 @@
 >
 > *Built on [Pi agent](https://github.com/badlogic/pi-mono) + DeepSeek V4 Pro.*
 
-[完整操作手册](使用手册.md) · [设计文档](docs/) · [协议](AGENTS.md) · [MIT License](LICENSE)
+[完整操作手册](使用手册.md) · [速查卡](速查卡.md) · [设计文档](docs/) · [协议](AGENTS.md) · [MIT License](LICENSE)
 
 ## 它是什么
 
@@ -91,11 +91,12 @@ flowchart TB
 .
 ├─ AGENTS.md            ← 协议（放到你的学习工作区根目录，pi 自动加载）
 ├─ 使用手册.md           ← 完整操作手册（从安装到毕业）
+├─ 速查卡.md            ← 功能与触发方式速查
 ├─ 背景知识.模板.md      ← 个人背景档案模板（复制为 背景知识.md 使用，勿上传个人版）
 ├─ docs\                ← 完整设计文档 01–12（理念/图谱模型/路径算法/四阶段/防幻觉/复习/校准/路线图…）
 ├─ skills\zhijing\      ← 教学技能卡 + 探寻问卷（pi skill）
 ├─ tools\graph_ops.py   ← 确定性计算内核（23 个子命令）
-├─ templates\           ← 新目标图谱模板
+├─ templates\           ← 文档模板包（文档规范 + 8 套模板）+ 新目标图谱模板
 ├─ prototype\           ← 路径算法演示（demo_path.py）
 ├─ tests\               ← 回归测试（33 项断言）
 └─ pi\                  ← 首次会话开场白（粘贴给 pi）
