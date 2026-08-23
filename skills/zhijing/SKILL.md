@@ -19,7 +19,7 @@ description: 知径共学系统——加权知识图谱驱动的四阶段教学�
 
 数值计算一律调用 `python tools/graph_ops.py <子命令> --graph graph.json`，**禁止心算路径代价、掌握度或复习间隔**：
 
-- 子命令：`init-goal / status / plan / teach-next / quiz / review / review-node / review-log / feel / calibrate / graph / graduate / import-headings / undo / finish / progress / progress-all / assess / assess-all / commit / log / timeline / capture / captures / add-node / add-edge`
+- 子命令：`init-goal / status / plan / teach-next / quiz / review / review-node / review-log / feel / calibrate / graph / graduate / import-headings / undo / finish / progress / progress-all / assess / assess-all / commit / log / timeline / roadmap / capture / captures / add-node / add-edge`
 - `init-goal <目录名> --goal <目标>` 在 F:\个人成长 下运行，自动建 `学习记录\<目录名>\` 全套；
 - `quiz` 需 `--grade 0|0.5|1` 与 `--conf 0-100`；`feel` 可用 `--r A B 新r` 修正关联度；
 - 你（LLM）负责读它的输出、生成讲解与对话、把用户语言翻译成命令参数。
@@ -31,6 +31,7 @@ description: 知径共学系统——加权知识图谱驱动的四阶段教学�
 | `/init <目标>` | 运行 `init-goal`：建 `学习记录\<目录名>\`（graph.json 模板 + 会话记录.md + 图谱导出/ + 素材/） |
 | `/status` | 已知区/半知区/未知区节点数、目标、当前最优路径总代价、到期复习数 |
 | `/plan` | Dijkstra（`λ=3`；已掌握目标点用 `c=0.7/r`）；输出每跳 `a→b (r, 代价, 类型)` + 总代价 + 与直连/中转备选对比 + 每跳为什么 |
+| `/roadmap`（"看计划"） | 阶段化网状规划：按距已知区层数分层成阶段，推荐主线 + 可并行支线 + 关键前提标注；计划是活文档，随 m/r 变化重排 |
 | `/demo` | 完整方案：路径 + 备选对比表 + 时间预估 + 反问用户"为什么先 A 后 B" |
 | `/teach` | 贪心前沿扩张取下一课；七步课：激活锚点→讲解(只用已知作锚,带来源与事实级别)→显式建边→多视角→兴趣扩展→练习→反思 |
 | `/quiz <点>` | 先问信心(0-100) → 让用户合上材料用自己的话写 → 出示参考答案与来源 → 请用户诚实自评(对/犹豫/错) → 更新 m 与复习间隔 |

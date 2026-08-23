@@ -307,6 +307,80 @@ def cmd_plan(g, G_, args):
         print(f"  {i}. {'→'.join(path)}   总代价 {cost:.2f}{marker}")
 
 
+def cmd_roadmap(g, G_, args):
+    """阶段化网状规划：按距已知区的层数分层成阶段，标注主线(最优路径)与支线。"""
+    goal = g.get("goal", "")
+    nodes = g["nodes"]
+    S = set(G_.starts())
+    # BFS 分层：layer = 距已知区 S 的最少跳数（前提距离）
+    layer = {n: 0 for n in S}
+    seen = set(S)
+    frontier = list(S)
+    lv = 0
+    while frontier:
+        nxt = []
+        lv += 1
+        for u in frontier:
+            for v, e in G_.adj.get(u, []):
+                if v in seen:
+                    continue
+                seen.add(v)
+                layer[v] = lv
+                nxt.append(v)
+        frontier = nxt
+    # 推荐主线（最优路径上的非已知点）
+    main_nodes, total = [], None
+    res = G_.dijkstra(goal) if goal in nodes else None
+    if res:
+        edges, total = res
+        seq = [edges[0][0]] + [b for _, b, _ in edges]
+        main_nodes = [n for n in seq if n not in S]
+    # 每个非已知点：最便宜的锚点 + 是否关键前提
+    info = {}
+    for n in nodes:
+        if n in S:
+            continue
+        best = None
+        for u, e in G_.adj.get(n, []):
+            if u in S or (u in layer and layer[u] < layer[n]):
+                c = G_.cost(u, n, e["r"])
+                if best is None or c < best[0]:
+                    best = (c, u, e["r"], e["type"])
+        prereq = any(e["a"] == n and e["type"] == "前提"
+                     and nodes.get(e["b"], {}).get("m", 0) < MASTERED for e in g["edges"])
+        info[n] = (layer.get(n, 99), best, prereq)
+    lines = []
+    lines.append(f"=== 阶段化网状规划 ===")
+    lines.append(f"目标: {goal}")
+    lines.append(f"推荐主线(最快到目标): {' → '.join(main_nodes) or '（暂无，先探寻补点）'}" +
+                 (f"   总代价 {total:.2f}" if total else ""))
+    max_lv = max((layer.get(n, 0) for n in nodes), default=0)
+    for lv in range(1, max_lv + 1):
+        members = [n for n in nodes if n not in S and layer.get(n) == lv]
+        if not members:
+            continue
+        members.sort(key=lambda n: (info[n][1][0] if info[n][1] else 999.0))
+        lines.append(f"\n阶段 {lv}（{len(members)} 个点）:")
+        for n in members:
+            _, best, prereq = info[n]
+            if best:
+                c, u, r, t = best
+                main = "★主线" if n in main_nodes else ""
+                pre = "◆关键前提" if prereq else ""
+                lines.append(f"  · {n:<10} 代价 {c:.2f}  锚点 {u}(r={r:.2f},{t})  {main} {pre}".rstrip())
+            else:
+                lines.append(f"  · {n:<10} （暂无可达锚点）")
+    lines.append("\n说明: 主线是推荐的最快路线; 其余是可并行/按兴趣选择的支线——计划是一张网, 随掌握度(m)与关联度(r)变化自动重排。")
+    print("\n".join(lines))
+    export_dir = os.path.join(args.state, "图谱导出")
+    os.makedirs(export_dir, exist_ok=True)
+    with open(os.path.join(export_dir, "分阶段计划.md"), "w", encoding="utf-8") as f:
+        f.write("\n".join(lines) + "\n")
+    process(g, "roadmap", stages=max_lv, main="→".join(main_nodes))
+    save_graph(args.graph, g)
+    print(f"\n已导出: {os.path.join(export_dir, '分阶段计划.md')}")
+
+
 def cmd_teach_next(g, G_, args):
     nodes = g["nodes"]
     goal = g.get("goal", "")
@@ -1141,6 +1215,7 @@ def main():
     sub = ap.add_subparsers(dest="cmd", required=True)
     sub.add_parser("status")
     sub.add_parser("plan")
+    sub.add_parser("roadmap")
     sub.add_parser("teach-next")
     q = sub.add_parser("quiz")
     q.add_argument("node")
@@ -1225,6 +1300,7 @@ def main():
     {
         "status": cmd_status,
         "plan": cmd_plan,
+        "roadmap": cmd_roadmap,
         "teach-next": cmd_teach_next,
         "quiz": cmd_quiz,
         "review": cmd_review,

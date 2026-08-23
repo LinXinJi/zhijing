@@ -58,6 +58,10 @@ try:
     out = run(tmp, "plan")
     check("plan 输出最优路径 斜率→切线→导数 (7.56)", "斜率 → 切线" in out and "7.56" in out)
 
+    out = run(tmp, "roadmap")
+    check("roadmap 分阶段网状规划",
+          "阶段" in out and "主线" in out and "切线" in out and "支线" in out)
+
     run(tmp, "teach-next")
     g = load(tmp)
     check("teach 事件写入 meta.process",
