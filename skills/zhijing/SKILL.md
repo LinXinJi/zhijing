@@ -19,7 +19,7 @@ description: 知径共学系统——加权知识图谱驱动的四阶段教学�
 
 数值计算一律调用 `python tools/graph_ops.py <子命令> --graph graph.json`，**禁止心算路径代价、掌握度或复习间隔**：
 
-- 子命令：`init-goal / status / plan / teach-next / quiz / review / review-node / review-log / feel / calibrate / graph / graduate / import-headings / undo / finish / progress / progress-all / assess / assess-all / commit / log / timeline / capture / captures`
+- 子命令：`init-goal / status / plan / teach-next / quiz / review / review-node / review-log / feel / calibrate / graph / graduate / import-headings / undo / finish / progress / progress-all / assess / assess-all / commit / log / timeline / capture / captures / add-node / add-edge`
 - `init-goal <目录名> --goal <目标>` 在 F:\个人成长 下运行，自动建 `学习记录\<目录名>\` 全套；
 - `quiz` 需 `--grade 0|0.5|1` 与 `--conf 0-100`；`feel` 可用 `--r A B 新r` 修正关联度；
 - 你（LLM）负责读它的输出、生成讲解与对话、把用户语言翻译成命令参数。
@@ -52,7 +52,7 @@ description: 知径共学系统——加权知识图谱驱动的四阶段教学�
 | `/commit -m 消息`（每课/每次复习/每次导入后必做） | 像 git commit：记录消息 + 自动汇总变更（教学/测验 m 变化/r 修正/导入），追加 meta.commits 与时间线 |
 | `/log`（或 `log c3` / 关键词） | 回望提交历史：默认摘要列表，指定序号或关键词看某次详情 |
 | "记录个疑问…" | `capture --type 疑问 --title …` 落读书札记 → **立即**用已知作锚解答（带 L1–L5 与来源）→ 发现缺前置知识则提议补进当前目标路径或开新目标；状态回填札记 |
-| "有个感悟…" | `capture --type 感悟` → 提炼"像不像 X 与 Y 的关系？" → 用户确认后建边（高 r、来源=我的感悟）→ 札记状态"已入图谱"；"看看我的札记" → `captures` 列表 |
+| "有个感悟…" | `capture --type 感悟` → 提炼"像不像 X 与 Y 的关系？" → 用户确认后 `add-edge` 建边（高 r、来源=我的感悟）；新概念先 `add-node`→ 札记状态"已入图谱"；"看看我的札记" → `captures` 列表 |
 
 探寻阶段（一阶段）使用 `skills/zhijing/探寻问卷.md`：宽→中→细三层标准问法、m 初始化规则与写回格式。
 

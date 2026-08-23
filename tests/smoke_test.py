@@ -134,6 +134,18 @@ try:
     out = run(tmp, "captures", "--base", tmp)
     check("读书札记捕获与列表",
           "测试疑问" in out and "测试感悟" in out and "待处理" in out)
+    check("札记落入 读书札记 子目录",
+          os.path.isdir(os.path.join(tmp, "读书札记")) and
+          len([f for f in os.listdir(os.path.join(tmp, "读书札记")) if f.endswith(".md")]) == 2)
+
+    run(tmp, "add-edge", "方程", "导数", "--r", "0.9", "--type", "类比", "--source", "我的感悟")
+    g = load(tmp)
+    check("add-edge 感悟建边入图",
+          any(e["a"] == "方程" and e["b"] == "导数" and e.get("source") == "我的感悟"
+              for e in g["edges"]))
+    run(tmp, "add-node", "新感悟点", "--def", "测试点", "--source", "读书札记")
+    g = load(tmp)
+    check("add-node 加点", "新感悟点" in g["nodes"])
 
     out = run(tmp, "progress")
     check("progress 面板含综合进度与导数", "综合进度" in out and "导数" in out)

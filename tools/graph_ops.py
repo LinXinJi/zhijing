@@ -717,6 +717,10 @@ def _render_timeline(g):
             lines.append(f"- {t} 毕业 · 导出终局图谱与学习报告")
         elif evt == "commit":
             lines.append(f"- {t} ▸ 提交 c{p.get('seq')}: {p.get('msg')}")
+        elif evt == "node-added":
+            lines.append(f"- {t} 加点 · 「{p.get('node')}」（{p.get('source')}）")
+        elif evt == "edge-added":
+            lines.append(f"- {t} 建边 · {p.get('a')} —{p.get('r')} ({p.get('type')})→ {p.get('b')}（{p.get('source')}）")
         else:
             lines.append(f"- {t} {evt}")
     return lines
@@ -797,12 +801,12 @@ def cmd_log(g, G_, args):
 
 
 def cmd_capture(g, G_, args):
-    """捕获读书札记：疑问/感悟 落为带时间戳的文件（收件箱）。"""
-    base = os.path.abspath(args.base)
-    os.makedirs(base, exist_ok=True)
+    """捕获读书札记：疑问/感悟 落为带时间戳的文件（base=工作区根，札记在其下 读书札记/）。"""
+    folder = os.path.join(os.path.abspath(args.base), "读书札记")
+    os.makedirs(folder, exist_ok=True)
     stamp = dt.datetime.now().strftime("%Y-%m-%d-%H%M")
     fname = f"{stamp}-{args.type}-{args.title}.md"
-    path = os.path.join(base, fname)
+    path = os.path.join(folder, fname)
     note = args.note or "（待填）"
     if args.type == "疑问":
         body = [
@@ -835,12 +839,12 @@ def cmd_capture(g, G_, args):
 
 
 def cmd_captures(g, G_, args):
-    """列出读书札记收件箱（按状态统计）。"""
-    base = os.path.abspath(args.base)
-    if not os.path.isdir(base):
+    """列出读书札记收件箱（base=工作区根，扫描其下 读书札记/）。"""
+    folder = os.path.join(os.path.abspath(args.base), "读书札记")
+    if not os.path.isdir(folder):
         print("读书札记还没有内容（说'记录个疑问'或'有个感悟'开始捕获）。")
         return
-    files = sorted(f for f in os.listdir(base) if f.endswith(".md"))
+    files = sorted(f for f in os.listdir(folder) if f.endswith(".md"))
     if not files:
         print("读书札记还没有内容（说'记录个疑问'或'有个感悟'开始捕获）。")
         return
@@ -848,7 +852,7 @@ def cmd_captures(g, G_, args):
     print(f"读书札记 ({len(files)} 条):")
     for fn in files:
         status = "待处理"
-        with open(os.path.join(base, fn), encoding="utf-8") as f:
+        with open(os.path.join(folder, fn), encoding="utf-8") as f:
             for line in f:
                 if line.startswith("- 状态:"):
                     status = line.split("状态:")[-1].strip()
@@ -856,6 +860,38 @@ def cmd_captures(g, G_, args):
         counts[status] = counts.get(status, 0) + 1
         print(f"  [{status}] {fn}")
     print("  状态统计: " + ", ".join(f"{k} {v} 条" for k, v in sorted(counts.items())))
+
+
+def cmd_add_node(g, G_, args):
+    """手工加点：读书札记的疑问/感悟落地为知识点。"""
+    if args.name in g["nodes"]:
+        print(f"节点已存在: {args.name}")
+        return
+    g["nodes"][args.name] = {"m": args.m, "type": args.type, "def": args.def_,
+                             "source": args.source, "fact_level": args.level,
+                             "views": ["主流"], "history": []}
+    process(g, "node-added", node=args.name, source=args.source)
+    save_graph(args.graph, g)
+    print(f"已加节点: {args.name} (m={args.m}, 来源={args.source})")
+
+
+def cmd_add_edge(g, G_, args):
+    """手工建边：感悟/疑问的连接落地（默认来源=我的感悟）。"""
+    a, b = args.a, args.b
+    for n in (a, b):
+        if n not in g["nodes"]:
+            print(f"节点不存在: {n}（先 add-node 或确认已入图）")
+            return
+    if find_edge(g, a, b):
+        print(f"边 {a}-{b} 已存在")
+        return
+    g["edges"].append({"a": a, "b": b, "r": args.r, "type": args.type,
+                       "why": args.why, "source": args.source})
+    process(g, "edge-added", a=a, b=b, r=args.r, type=args.type, source=args.source)
+    save_graph(args.graph, g)
+    print(f"已建边: {a} —{args.r:.2f} ({args.type})→ {b}")
+    print(f"  依据: {args.source}   说明: {args.why or '-'}")
+    print("  这条边会显示在知识路径图/毕业图谱里为「我的连接」")
 
 
 def cmd_review_node(g, G_, args):
@@ -1126,9 +1162,23 @@ def main():
     cp.add_argument("--type", required=True, choices=["疑问", "感悟"])
     cp.add_argument("--title", required=True)
     cp.add_argument("-m", "--note", default="")
-    cp.add_argument("--base", default="读书札记")
+    cp.add_argument("--base", default=".")
     cs = sub.add_parser("captures")
-    cs.add_argument("--base", default="读书札记")
+    cs.add_argument("--base", default=".")
+    an = sub.add_parser("add-node")
+    an.add_argument("name")
+    an.add_argument("--m", type=float, default=0.3)
+    an.add_argument("--type", default="概念")
+    an.add_argument("--def", dest="def_", default="")
+    an.add_argument("--source", default="读书札记")
+    an.add_argument("--level", default="L4")
+    ae = sub.add_parser("add-edge")
+    ae.add_argument("a")
+    ae.add_argument("b")
+    ae.add_argument("--r", type=float, default=0.8)
+    ae.add_argument("--type", default="类比")
+    ae.add_argument("--why", default="")
+    ae.add_argument("--source", default="我的感悟")
     a = sub.add_parser("assess")
     a.add_argument("node")
     sub.add_parser("assess-all")
@@ -1180,6 +1230,8 @@ def main():
         "review": cmd_review,
         "review-node": cmd_review_node,
         "review-log": cmd_review_log,
+        "add-node": cmd_add_node,
+        "add-edge": cmd_add_edge,
         "undo": cmd_undo,
         "progress": cmd_progress,
         "timeline": cmd_timeline,

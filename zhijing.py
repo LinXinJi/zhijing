@@ -310,6 +310,10 @@ def capture_flow(base, kind, content):
         ref = llm(f"用户读书感悟: {content}。提炼它像不像是两个已知概念之间的关系/类比? 用一句话概括, 并给出'建议建边: X-Y, 类型'。100字内。")
         if ref:
             print("\n[提炼]\n" + ref)
+        print("  确认后建边入图: 对知径说  add-edge <A> <B> --r 0.9 --type 类比 --source 我的感悟")
+        print("  （若涉及新概念, 先 add-node <名称> --def 一句话定义）")
+    if kind == "疑问" and content:
+        print("  若这个疑问揭示了知识缺口, 可用 add-node / add-edge 补进某个学习目标")
 
 
 # ---------- 主流程 ----------
@@ -401,7 +405,7 @@ def dispatch(base, line):
     if bare in ("status", "plan", "teach-next", "quiz", "review", "feel", "calibrate",
                 "graph", "graduate", "source", "import-headings", "undo", "progress",
                 "assess", "assess-all", "commit", "log", "timeline",
-                "review-node", "review-log"):
+                "review-node", "review-log", "add-node", "add-edge"):
         goal = choose_goal(base)
         if not goal:
             return True
