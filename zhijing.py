@@ -324,10 +324,26 @@ def cmd_new(base, topic):
     return name
 
 
+def auto_finalize(base, goal):
+    """直接退出后：下次继续时检测上一课未收尾，自动补摘要 + 提交。"""
+    gp = graph_path(base, goal)
+    g = load_graph(gp)
+    procs = g["meta"].get("process", [])
+    if not procs or procs[-1]["evt"] != "teach":
+        return
+    taught = procs[-1]
+    print("（检测到上次课未收尾即退出，自动补记）")
+    append_file(os.path.join(base, "学习记录", "正在学习", goal, "会话记录.md"),
+                [f"- [自动收尾] 上次课「{taught.get('b')}」未完成收口即退出（{taught.get('ts')}），"
+                 f"本课状态已保存，缺 /feel 与课末提交。"])
+    print(run_ops("--graph", gp, "commit", "-m", f"上次课「{taught.get('b')}」中断退出，自动收尾"))
+
+
 def cmd_continue(base):
     goal = choose_goal(base)
     if not goal:
         return
+    auto_finalize(base, goal)
     gp = graph_path(base, goal)
     print(run_ops("--graph", gp, "status"))
     lesson(base, goal)
