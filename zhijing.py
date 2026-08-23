@@ -371,9 +371,7 @@ def cmd_graduate(base):
     gp = graph_path(base, goal)
     print(run_ops("--graph", gp, "graduate"))
     print(run_ops("finish", goal, "--base", base))
-    append_file(os.path.join(base, "背景知识.md"),
-                [f"- ✅ 已完成目标: {goal}（{GO.now()}）"])
-    print(f"已归档到 学习记录\\已经学完\\{goal}")
+    print(f"已归档到 学习记录\\已经学完\\{goal}（完成档案已永久写进 背景知识.md）")
 
 
 def dispatch(base, line):

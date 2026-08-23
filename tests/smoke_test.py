@@ -192,6 +192,9 @@ try:
     check("finish 归档到 学习记录/已经学完",
           not os.path.exists(os.path.join(tmp, "学习记录", "正在学习", "测试目标")) and
           os.path.exists(os.path.join(tmp, "学习记录", "已经学完", "测试目标", "graph.json")))
+    check("finish 写死完成档案到背景知识",
+          "已完成档案" in io.open(os.path.join(tmp, "背景知识.md"), encoding="utf-8").read()
+          and "测试" in io.open(os.path.join(tmp, "背景知识.md"), encoding="utf-8").read())
 
     out = run(tmp, "progress-all", "--base", tmp)
     check("finish 后总览列出已经学完", "已经学完" in out and "测试目标" in out)

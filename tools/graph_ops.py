@@ -544,6 +544,33 @@ def cmd_finish(g, G_, args):
         return
     shutil.move(src, dst)
     print(f"已归档: 学习记录\\正在学习\\{args.name} → 学习记录\\已经学完\\{args.name}")
+    # 永久档案：写进 背景知识.md 的"已完成档案"节（目录移出分类也不丢）
+    try:
+        with open(os.path.join(dst, "graph.json"), encoding="utf-8") as f:
+            gg = json.load(f)
+        goal = gg.get("goal", args.name)
+        nodes = gg["nodes"]
+        gm = nodes.get(goal, {}).get("m", 0.0) if goal in nodes else 0.0
+        procs = gg["meta"].get("process", [])
+        commits = gg["meta"].get("commits", [])
+        entry = [f"\n### {dt.datetime.now().strftime('%Y-%m-%d')} · {goal}",
+                 f"- 最终目标m: {gm:.2f} · 知识点: {len(nodes)} 个 · 提交: {len(commits)} 笔 · 事件: {len(procs)} 条",
+                 f"- 目录: 学习记录\\已经学完\\{args.name}（可移出分类，本档案永久保留）"]
+        bg_path = os.path.join(base, "背景知识.md")
+        old = ""
+        if os.path.exists(bg_path):
+            with open(bg_path, encoding="utf-8") as f:
+                old = f.read()
+        section = "## 已完成档案（永久）\n"
+        if section in old:
+            old = old.replace(section, section + "\n".join(entry) + "\n", 1)
+        else:
+            old = old.rstrip() + "\n\n" + section + "\n".join(entry) + "\n"
+        with open(bg_path, "w", encoding="utf-8") as f:
+            f.write(old)
+        print("已完成档案已写进 背景知识.md（永久保留，移出目录也不丢）")
+    except Exception as e:
+        print(f"[警告] 写入已完成档案失败: {e}")
 
 
 def cmd_progress(g, G_, args):
