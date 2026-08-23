@@ -506,6 +506,7 @@ def main():
         return
     print("知径 · 以知为径，与 AI 同行。")
     print("说「我想学习 X」开始 / 「/help」看命令 / 「退出」结束")
+    run_ops("sync-background", "--base", base)  # 启动时同步背景知识
     while True:
         try:
             line = input_("知径> ")
@@ -520,6 +521,7 @@ def main():
         if not dispatch(base, line):
             print("再见。你的进度都保存在文件里, 下次说「继续学习」。")
             break
+    run_ops("sync-background", "--base", base)  # 退出时同步背景知识
 
 
 if __name__ == "__main__":

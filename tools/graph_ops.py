@@ -508,9 +508,9 @@ def cmd_quiz(g, G_, args):
 
 
 def cmd_init(g, G_, args):
-    """新建学习目标：学习记录/正在学习/<名称>/ 含模板图谱、会话记录、产物与素材目录。"""
+    """新建学习目标：<base>/学习记录/正在学习/<名称>/（base=工作区根）。"""
     base = os.path.abspath(args.base)
-    zhengzai = os.path.join(base, "正在学习")
+    zhengzai = os.path.join(base, "学习记录", "正在学习")
     os.makedirs(zhengzai, exist_ok=True)
     target = os.path.join(zhengzai, args.name)
     os.makedirs(os.path.join(target, "图谱导出"), exist_ok=True)
@@ -530,20 +530,20 @@ def cmd_init(g, G_, args):
 
 
 def cmd_finish(g, G_, args):
-    """学完收档：把 学习记录/正在学习/<名称> 移到 学习记录/已经学完/<名称>。"""
+    """学完收档：<base>/学习记录/正在学习/<名称> → <base>/学习记录/已经学完/<名称>。"""
     base = os.path.abspath(args.base)
-    src = os.path.join(base, "正在学习", args.name)
+    src = os.path.join(base, "学习记录", "正在学习", args.name)
     if not os.path.isdir(src):
-        print(f"未找到 正在学习\\{args.name}")
+        print(f"未找到 学习记录\\正在学习\\{args.name}")
         return
-    dst_root = os.path.join(base, "已经学完")
+    dst_root = os.path.join(base, "学习记录", "已经学完")
     os.makedirs(dst_root, exist_ok=True)
     dst = os.path.join(dst_root, args.name)
     if os.path.exists(dst):
-        print(f"已经学完\\{args.name} 已存在，请先改名或合并")
+        print(f"学习记录\\已经学完\\{args.name} 已存在，请先改名或合并")
         return
     shutil.move(src, dst)
-    print(f"已归档: 正在学习\\{args.name} → 已经学完\\{args.name}")
+    print(f"已归档: 学习记录\\正在学习\\{args.name} → 学习记录\\已经学完\\{args.name}")
 
 
 def cmd_progress(g, G_, args):
@@ -607,10 +607,10 @@ def cmd_progress(g, G_, args):
 
 
 def cmd_progress_all(g, G_, args):
-    """全部学习进度总览：扫描 正在学习 下所有目标 + 已经学完 清单。"""
+    """全部学习进度总览：扫描 <base>/学习记录/正在学习 与 已经学完（base=工作区根）。"""
     base = os.path.abspath(args.base)
-    ongoing = os.path.join(base, "正在学习")
-    done_dir = os.path.join(base, "已经学完")
+    ongoing = os.path.join(base, "学习记录", "正在学习")
+    done_dir = os.path.join(base, "学习记录", "已经学完")
     rows = []
     if os.path.isdir(ongoing):
         for name in sorted(os.listdir(ongoing)):
@@ -902,6 +902,58 @@ def cmd_log(g, G_, args):
     print("提交历史 (log):")
     for c in commits:
         print(f"  c{c['seq']:<4} {c['ts']}  {c['msg']}")
+
+
+def cmd_sync_background(g, G_, args):
+    """自动同步 背景知识.md 的动态节：当前学习目标 + 已学完（与实际学习记录一致）。"""
+    import re
+    base = os.path.abspath(args.base)
+    bg_path = os.path.join(base, "背景知识.md")
+    ongoing = []
+    on_dir = os.path.join(base, "学习记录", "正在学习")
+    if os.path.isdir(on_dir):
+        for name in sorted(os.listdir(on_dir)):
+            gp = os.path.join(on_dir, name, "graph.json")
+            if not os.path.isfile(gp):
+                continue
+            with open(gp, encoding="utf-8") as f:
+                gg = json.load(f)
+            goal = gg.get("goal", name)
+            nodes = gg["nodes"]
+            gm = nodes.get(goal, {}).get("m", 0.0) if goal in nodes else 0.0
+            procs = gg["meta"].get("process", [])
+            last = procs[-1]["ts"] if procs else "-"
+            ongoing.append((goal, gm, len(nodes), last))
+    done_names = []
+    dn_dir = os.path.join(base, "学习记录", "已经学完")
+    if os.path.isdir(dn_dir):
+        done_names = sorted(os.listdir(dn_dir))
+    lines = ["## 当前学习目标", ""]
+    if ongoing:
+        lines.append(f"（自动同步于 {now()}，与实际学习记录一致）")
+        for goal, gm, n, last in ongoing:
+            pct = min(gm / MASTERED, 1.0)
+            bar = "▓" * int(round(pct * 20)) + "░" * (20 - int(round(pct * 20)))
+            lines.append(f"- {goal}  [目标m={gm:.2f}]  {n} 个知识点 · 最近 {last}  {bar}")
+    else:
+        lines.append("- （无进行中的目标）")
+    if done_names:
+        lines.append("")
+        lines.append(f"已学完: {len(done_names)} 个 → " + "、".join(done_names))
+    lines.append("")
+    old = ""
+    if os.path.exists(bg_path):
+        with open(bg_path, encoding="utf-8") as f:
+            old = f.read()
+    new = re.sub(r'## 当前学习目标.*?(?=## |\Z)', "\n".join(lines) + "\n", old, count=1, flags=re.S)
+    if "## 当前学习目标" not in old:
+        new = old.rstrip() + "\n\n" + "\n".join(lines) + "\n"
+    with open(bg_path, "w", encoding="utf-8") as f:
+        f.write(new)
+    print(f"背景知识已同步: {bg_path}")
+    for l in lines[1:]:
+        if l:
+            print("  " + l)
 
 
 def cmd_capture(g, G_, args):
@@ -1271,6 +1323,8 @@ def main():
     cp.add_argument("--base", default=".")
     cs = sub.add_parser("captures")
     cs.add_argument("--base", default=".")
+    sb = sub.add_parser("sync-background")
+    sb.add_argument("--base", default=".")
     an = sub.add_parser("add-node")
     an.add_argument("name")
     an.add_argument("--m", type=float, default=0.3)
@@ -1289,14 +1343,14 @@ def main():
     a.add_argument("node")
     sub.add_parser("assess-all")
     pa = sub.add_parser("progress-all")
-    pa.add_argument("--base", default="学习记录")
+    pa.add_argument("--base", default=".")
     n = sub.add_parser("init-goal")
     n.add_argument("name")
     n.add_argument("--goal", required=True)
-    n.add_argument("--base", default="学习记录")
+    n.add_argument("--base", default=".")
     f2 = sub.add_parser("finish")
     f2.add_argument("name")
-    f2.add_argument("--base", default="学习记录")
+    f2.add_argument("--base", default=".")
     f = sub.add_parser("feel")
     f.add_argument("text", nargs="+")
     f.add_argument("--r", nargs=3, metavar=("A", "B", "NEW_R"))
@@ -1323,6 +1377,9 @@ def main():
         return
     if args.cmd == "captures":
         cmd_captures(None, None, args)
+        return
+    if args.cmd == "sync-background":
+        cmd_sync_background(None, None, args)
         return
     g = load_graph(args.graph)
     G_ = G(g)

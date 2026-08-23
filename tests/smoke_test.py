@@ -173,20 +173,25 @@ try:
           "测试点A" not in g["nodes"] and "测试点B" not in g["nodes"])
 
     run(tmp, "init-goal", "测试目标", "--goal", "测试", "--base", tmp)
-    g2path = os.path.join(tmp, "正在学习", "测试目标", "graph.json")
-    check("init-goal 建到 正在学习 且含模板图谱",
+    g2path = os.path.join(tmp, "学习记录", "正在学习", "测试目标", "graph.json")
+    check("init-goal 建到 学习记录/正在学习 且含模板图谱",
           os.path.exists(g2path) and
           json.load(open(g2path, encoding="utf-8"))["goal"] == "测试" and
-          os.path.exists(os.path.join(tmp, "正在学习", "测试目标", "会话记录.md")) and
-          os.path.isdir(os.path.join(tmp, "正在学习", "测试目标", "复习")))
+          os.path.exists(os.path.join(tmp, "学习记录", "正在学习", "测试目标", "会话记录.md")) and
+          os.path.isdir(os.path.join(tmp, "学习记录", "正在学习", "测试目标", "复习")))
 
     out = run(tmp, "progress-all", "--base", tmp)
     check("progress-all 总览含测试目标", "测试目标" in out)
 
+    run(tmp, "sync-background", "--base", tmp)
+    bg = os.path.join(tmp, "背景知识.md")
+    check("sync-background 自动同步背景知识",
+          os.path.exists(bg) and "测试" in io.open(bg, encoding="utf-8").read())
+
     run(tmp, "finish", "测试目标", "--base", tmp)
-    check("finish 归档到 已经学完\\",
-          not os.path.exists(os.path.join(tmp, "正在学习", "测试目标")) and
-          os.path.exists(os.path.join(tmp, "已经学完", "测试目标", "graph.json")))
+    check("finish 归档到 学习记录/已经学完",
+          not os.path.exists(os.path.join(tmp, "学习记录", "正在学习", "测试目标")) and
+          os.path.exists(os.path.join(tmp, "学习记录", "已经学完", "测试目标", "graph.json")))
 
     out = run(tmp, "progress-all", "--base", tmp)
     check("finish 后总览列出已经学完", "已经学完" in out and "测试目标" in out)
