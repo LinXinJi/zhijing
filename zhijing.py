@@ -51,9 +51,17 @@ def run_ops(*args):
 
 def workspace():
     cwd = os.getcwd()
-    if os.path.exists(os.path.join(cwd, "AGENTS.md")) or os.path.exists(os.path.join(cwd, "学习记录")):
+    # 1) 当前目录就是工作区
+    if os.path.isdir(os.path.join(cwd, "学习记录")):
         return cwd
-    return os.path.dirname(REPO)
+    # 2) 本仓库嵌在工作区内（如 F:\个人成长\AI共学系统）→ 用父目录
+    parent = os.path.dirname(REPO)
+    if os.path.isdir(os.path.join(parent, "学习记录")):
+        return parent
+    # 3) 独立克隆：仓库根即工作区（学习数据被 .gitignore 排除）
+    if os.path.exists(os.path.join(REPO, "AGENTS.md")):
+        return REPO
+    return cwd
 
 
 _EOF = [False]
