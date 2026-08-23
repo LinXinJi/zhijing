@@ -123,7 +123,7 @@
 
 ## 命令表（协议命令，按 skills/zhijing 执行）
 
-`/status /plan /demo /teach /quiz <点> /review /feel /graph /calibrate /graduate /source <点> /import <路径> /doubt /undo /progress /assess <点> /commit /log /timeline /finish <目标> /help`
+`/status /plan /demo /teach /quiz <点> /review /feel /graph /calibrate /graduate /source <点> /import <路径> /doubt /undo /progress /assess <点> /commit /log /timeline /add-node <名> /add-edge <A> <B> /finish <目标> /help`
 
 （`/init`、`/capture`、`/captures` 由自然语言触发："我想学习 X"、"记录个疑问…"、"看看我的札记"。）
 
