@@ -1,0 +1,11 @@
+{
+  "goal": "",
+  "nodes": {},
+  "edges": [],
+  "meta": {
+    "lambda": 3.0,
+    "mastered_threshold": 0.8,
+    "process": [],
+    "interest": {}
+  }
+}

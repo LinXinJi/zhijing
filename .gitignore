@@ -1,0 +1,20 @@
+# 个人数据与运行时产物（绝不入库）
+背景知识.md
+学习记录/
+读书札记/
+笔记/
+收集材料/
+图谱导出/
+*.log
+audit.log
+quiz_log.jsonl
+feedback.jsonl
+
+# Python
+__pycache__/
+*.pyc
+tests/.smoke_tmp/
+
+# 系统
+.DS_Store
+Thumbs.db
