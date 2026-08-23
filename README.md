@@ -1,7 +1,11 @@
 # 知径 Zhijing · 人机共学
 
 > **以知为径，与 AI 同行。**
-> *Zhijing — a terminal-native AI learning companion. It maps what you already know into a weighted knowledge graph, plans the minimum-cost path to your learning goal, teaches with sourced explanations and spaced reviews, and graduates you with a full knowledge graph, scorecard and timeline. Built on [Pi agent](https://github.com/badlogic/pi-mono) + DeepSeek V4 Pro.*
+>
+>
+> *Zhijing — a terminal-native AI learning companion. It maps what you already know into a weighted knowledge graph, plans the minimum-cost path to your learning goal, teaches with sourced explanations and spaced reviews, and graduates you with a full knowledge graph, scorecard and timeline.* 
+>
+> *Built on [Pi agent](https://github.com/badlogic/pi-mono) + DeepSeek V4 Pro.*
 
 [完整操作手册](使用手册.md) · [设计文档](docs/) · [协议](AGENTS.md) · [MIT License](LICENSE)
 
@@ -56,36 +60,28 @@ python zhijing.py --check    # 环境自检
 
 ```powershell
 python tools\graph_ops.py init-goal <目录名> --goal <目标>   # 或直接对 pi 说"我想学习 X"
-python tests\smoke_test.py                                    # 自检（33 项断言）
+python tests\smoke_test.py                                  # 自检（33 项断言）
 ```
 
-## 架构
+## 使用流程
 
 ```mermaid
-flowchart LR
-  U[我] <-->|唯一接口| A[终端教学 Agent]
-  subgraph core["核心引擎"]
-    KG[(加权知识图谱<br/>知识点 + 关联度 + 掌握度)]
-    PA[路径规划器<br/>最小权重路径 Dijkstra]
-    SR[练习调度器<br/>间隔重复 SM-2]
-    FC[反馈校准器<br/>成绩+感受 → 校准参数]
-  end
-  subgraph loop["四阶段闭环"]
-    E[一 探寻] --> P[二 计划] --> D[三 演示] --> T[四 教学]
-    T -.反馈校准/动态重规划.-> P
-  end
-  A --> KG
-  MAT[(我的笔记 + 收集材料)] -.导入与来源锚定.-> KG
-  KG --> PA --> D
-  T --> SR --> KG
-  T --> FC --> KG
-  FC -.重规划.-> PA
-  KG -.学习完成.-> FKG[终局知识图谱<br/>成绩单 + 时间线]
+flowchart TB
+  U([你]) -->|一句话 · 我想学习 X / 继续学习 / 我要复习 / 我学完了| A[知径 · 终端教学 Agent]
+  A --> E[一 探寻 · 摸清已知知识]
+  E --> KG[(加权知识图谱<br/>知识点 · 关联度 · 掌握度)]
+  KG --> P[二 计划 · 最小权重路径]
+  P --> D[三 演示 · 学习规划图]
+  D --> T[四 教学 · 讲解 / 连接 / 练习 / 复习]
+  T --> F[反馈校准 · 成绩改 m / 感受改 r]
+  F -->|练习巩固 → 权重变小 → 动态重规划| P
+  KG -->|目标掌握度达标| GRAD[毕业 · 知识图谱 + 成绩单 + 时间线]
+  B[(读书札记<br/>疑问 / 感悟)] -.->|捕获后入图| KG
 ```
 
 - **Pi agent = 手**（终端、文件、命令、权限与审计）；**DeepSeek V4 Pro = 脑**（讲解、规划）
-- `**AGENTS.md` + `skills/` = 操作手册**；`**graph.json` = 记忆**（记忆在文件里，不在对话里）
-- `**tools/graph_ops.py` = 确定性内核**：路径/m/间隔/校准/评价/导出/提交，全部由代码计算
+- `AGENTS.md` + `skills/` = **操作手册**；`graph.json` = **记忆**（记忆在文件里，不在对话里）
+- `tools/graph_ops.py` = **确定性内核**：路径/m/间隔/校准/评价/导出/提交，全部由代码计算
 
 ## 目录结构
 
