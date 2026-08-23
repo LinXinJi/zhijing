@@ -36,6 +36,17 @@
 
 ## 快速开始
 
+**方式 A · 开箱即用（推荐先试）**：
+
+```powershell
+python zhijing.py            # 进入交互：说"我想学习 X"开始（无需任何配置）
+python zhijing.py --check    # 环境自检
+```
+
+设置环境变量 `DEEPSEEK_API_KEY` 后，讲解/提问/解答自动交给 DeepSeek（可选）。
+
+**方式 B · Pi agent 完整方案**：
+
 1. 安装 [Pi agent](https://github.com/badlogic/pi-mono)，接入 DeepSeek（[官方指引](https://api-docs.deepseek.com/quick_start/agent_integrations/pi_mono/)：`DEEPSEEK_API_KEY` + `deepseek-chat`/`deepseek-reasoner`）；
 2. 克隆本仓库到你的学习工作区，把 `AGENTS.md` 放到工作区根目录；
 3. 打开 pi，说：**"我想学习 <主题>"** —— 它会自动建目录、开始探寻；
